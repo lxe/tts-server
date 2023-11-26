@@ -1,4 +1,0 @@
-[submodule "tts_server/styletts2"]
-	path = tts_server/styletts2
-	url = https://github.com/yl4579/StyleTTS2.git
-	shallow = true

@@ -1,16 +1,2 @@
-cached_path
-nltk
-scipy
-torch
-numpy
-munch
-torchaudio
-librosa
-phonemizer
-sounddevice
-einops
-einops_exts
-transformers
-matplotlib
 flask
-git+https://github.com/resemble-ai/monotonic_align.git
+git+https://github.com/lxe/styletts2.git

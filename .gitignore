@@ -2,6 +2,3 @@
 sessions/
 build/
 *.egg-info
-
-styletts2/Utils/PLBERT/__init__.py
-styletts2/__init__.py
