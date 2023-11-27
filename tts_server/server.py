@@ -4,6 +4,7 @@ import io
 import soundfile as sf
 import argparse
 from styletts2 import TTS
+import subprocess
 
 app = Flask(__name__)
 fdir = os.path.dirname(__file__)
@@ -13,6 +14,25 @@ styles = {}
 prev_s_db = {}
 
 tts = None
+
+
+class Phonemizer:
+    def __init__(self, language='en-us'):
+        self.language = language
+
+    def phonemize(self, texts):
+        try:
+            passage = texts[0]
+            command = f'echo {passage} | espeak-phonemizer -v {self.language} --keep-punctuation'
+            output = subprocess.check_output(command, shell=True, text=True)
+            print(output)
+            return [output]
+        except Exception as e:
+            print(e)
+            return None
+
+
+phonemizer = Phonemizer()
 
 
 @app.errorhandler(404)
@@ -57,6 +77,7 @@ def text_to_speech():
         wav, prev_s = tts.inference(
             text,
             style,
+            phonemizer=phonemizer,
             prev_s=prev_s,
             alpha=alpha,
             beta=beta,

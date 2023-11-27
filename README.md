@@ -17,7 +17,7 @@ TODO:
 ## Starting The Server
 
 ```bash
-pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu121 
+pip install espeak-phonemizer torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu121 
 pip install git+https://github.com/lxe/tts-server.git   
 ```
 
