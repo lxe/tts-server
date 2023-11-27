@@ -1,13 +1,11 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_file
 import os
-import time
+import io
 import soundfile as sf
 import argparse
-# import langdetect
-from styletts2 import TTS  # import here to avoid loading it when running --help
+from styletts2 import TTS
 
 app = Flask(__name__)
-cwd = os.getcwd()
 fdir = os.path.dirname(__file__)
 
 # Cache for styles
@@ -22,42 +20,13 @@ def not_found(error):
     return jsonify({'error': 'Not found'}), 404
 
 
-@app.route('/destroy_session', methods=['DELETE'])
-def destroy_session():
-    session = request.args.get('session')
-
-    if not session:
-        return jsonify({"error": "Missing session parameter"}), 400
-
-    session_dir = os.path.join(cwd, 'sessions', session)
-    if os.path.exists(session_dir):
-        os.system(f'rm -rf {session_dir}')
-
-    return jsonify({"success": True}), 200
-
-
-@app.route('/download', methods=['GET'])
-def download_file():
-    session = request.args.get('session')
-    filename = request.args.get('filename')
-
-    if not session or not filename:
-        return jsonify({"error": "Missing session or filename parameter"}), 400
-
-    session_dir = os.path.join(cwd, 'sessions', session)
-    file_path = os.path.join(session_dir, filename)
-
-    if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"}), 404
-
-    return send_from_directory(session_dir, filename, as_attachment=True)
-
-
 @app.route('/tts', methods=['POST'])
 def text_to_speech():
     try:
-        data = request.json
+        if request.headers.get('Accept') != 'audio/wav':
+            return jsonify({"error": "Only audio/wav is supported"}), 400
 
+        data = request.json
         session = data.get('session')
         text = data.get('text')
 
@@ -67,20 +36,11 @@ def text_to_speech():
         if not text:
             return jsonify({"error": "Missing text"}), 400
 
-        # language = data.get('language', None)
-        # if language is None:
-        #     language = langdetect.detect(text)
-
         voice = data.get('style', 'en-f-1')
         alpha = data.get('alpha', 0.1)
         beta = data.get('beta', 0.3)
         diffusion_steps = data.get('diffusion_steps', 5)
         embedding_scale = data.get('embedding_scale', 1)
-
-        # Create session directory if not exists
-        session_dir = os.path.join(cwd, 'sessions', session)
-        if not os.path.exists(session_dir):
-            os.makedirs(session_dir)
 
         # Retrieve or compute style
         if voice not in styles:
@@ -107,18 +67,12 @@ def text_to_speech():
         # Update previous voice state
         prev_s_db[vkey] = prev_s
 
-        # Save audio
-        filename = f"{int(time.time())}.wav"
-        filepath = os.path.join(session_dir, filename)
-        sf.write(filepath, wav, 24000)
+        byte_io = io.BytesIO()
+        sf.write(byte_io, wav, 24000, format='WAV')
+        byte_io.seek(0)
+        return send_file(byte_io, mimetype='audio/wav')
 
-        # If we are accepting wav's, return the wav
-        if request.headers.get('Accept') == 'audio/wav':
-            return send_from_directory(session_dir, filename, as_attachment=True)
-        else:
-            return jsonify({"filename": filename, "session": session}), 200
     except Exception as e:
-        raise
         return jsonify({"error": str(e)}), 500
 
 
