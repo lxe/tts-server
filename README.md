@@ -6,25 +6,22 @@ This project is a simple Text-to-Speech (TTS) server implemented in Python using
 
 The primary function of this server is to facilitate the generation of long-form text and manage a queue for its subsequent playback through a separate client. 
 
-To achieve this, the server stores WAV files associated with each session and provides a download API, allowing clients to retrieve and play the generated audio files sequentially. 
-
-To maintain consistency in style throughout the narration, it leverages the longform narration demo code from the StyleTTS2 codebase.
-
 TODO: 
- - [ ] Make a sane session API with cookies instead of params, and proper deletion, etc...
  - [ ] Add ability to pass custom voice styles
 
 ## Starting The Server
 
 ```bash
-pip install espeak-phonemizer torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu121 
-pip install git+https://github.com/lxe/tts-server.git   
+pip install espeak-phonemizer
+pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu121 
+pip install git+https://github.com/lxe/tts-server.git
 ```
 
 Run the server like so:
 
 ```bash
-tts-server
+python -m tts_server.server
+# or tts-server
 ```
 
 You can use `--host <host>` and `--port <port>`.
@@ -61,37 +58,21 @@ Perform TTS
   - `beta` (float, optional)
   - `diffusion_steps` (int, optional)
   - `embedding_scale` (float, optional)
-- **Response** (JSON):
-  - `filename` (string)
-  - `session` (string)
 - **Response** (audio/wav):
   - Binary wav
 
-Destroy the session with all its generated files:
-
-- **Method**: DELETE
-- **URL**: `/destroy_session`
-- **Params**:
-  - `session` (string, required)
-
-Download File
-
-- **Method**: GET
-- **URL**: `/download`
-- **Params**:
-  - `filename` (string, required)
-  - `session` (string)
+Note: each TTS generation in a session will follow the style of previous one for long-form narration coherency. 
 
 ### CLI Client
 
-You can send TTS requests to the server using the CLI client, which will play them back. Here's how to use it:
+You can send TTS requests to the server using the CLI client, which will play them back. You can either use `python -m tts_server.cli` or the `tts-server-cli` binary.
 
 ```bash
-tts-server-cli <base_url> <passage> [--style <style>] [--alpha <alpha>] [--beta <beta>] [--diffusion_steps <diffusion_steps>] [--embedding_scale <embedding_scale>] [--session <session>]
+python -m tts_server.cli <base_url> <passage> [--style <style>] [--alpha <alpha>] [--beta <beta>] [--diffusion_steps <diffusion_steps>] [--embedding_scale <embedding_scale>] [--session <session>]
 ```
 
-- `<base_url>`: The URL of the TTS server (e.g., http://localhost:5050).
 - `<passage>`: The text you want to convert to speech. Pass '-' to read from stdin
+- `--url <base_url>`: The URL of the TTS server (e.g., http://localhost:5050).
 - `--session <session>`: A session identifier for continuing existing TTS requests.
 - `--style <style>` (optional): The style of the voice to use (default: 'en-f-1').
 - `--alpha <alpha>` (optional): The alpha parameter (default: 0.1).
@@ -102,13 +83,13 @@ tts-server-cli <base_url> <passage> [--style <style>] [--alpha <alpha>] [--beta 
 Example:
 
 ```bash
-tts-server-cli http://localhost:5050 "In a fantastical forest, flittering fireflies illuminate the night, casting a mesmerizing dance of light and shadow beneath the ancient, gnarled trees."
+python -m tts_server.cli "In a fantastical forest, flittering fireflies illuminate the night, casting a mesmerizing dance of light and shadow beneath the ancient, gnarled trees."
 ```
 
 For long-form narration:
 
 ```bash
-echo "As the fireflies twinkle in harmonious rhythm, their gentle glow reveals the secrets of the woodland. Tiny creatures, hidden from sight by day, emerge to partake in this nocturnal spectacle. Frogs serenade with their melodic croaks, and owls, wise sentinels of the night, exchange hoots that echo through the enchanted forest." | tts-server-cli http://localhost:5050 -
+echo "As the fireflies twinkle in harmonious rhythm, their gentle glow reveals the secrets of the woodland. Tiny creatures, hidden from sight by day, emerge to partake in this nocturnal spectacle. Frogs serenade with their melodic croaks, and owls, wise sentinels of the night, exchange hoots that echo through the enchanted forest." | python -m tts_server.cli -
 ```
 
 ## Credits

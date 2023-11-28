@@ -11,7 +11,7 @@ import nltk.data
 
 sentence_detector = nltk.data.load('tokenizers/punkt/english.pickle')
 
-base_url = 'http://localhost:5050'
+url = 'http://localhost:5050'
 session = str(int(time.time()))
 audio_queue = queue.Queue()
 
@@ -43,11 +43,7 @@ def play_sentence(sentence, style, alpha, beta, diffusion_steps, embedding_scale
     }
 
     try:
-        response = requests.post(
-            f'{base_url}/tts',
-            headers={'Accept': 'audio/wav'},
-            json=data
-        )
+        response = requests.post(f'{url}/tts', headers={'Accept': 'audio/wav'}, json=data)
     except Exception as e:
         print(e)
         return
@@ -62,23 +58,18 @@ def play_sentence(sentence, style, alpha, beta, diffusion_steps, embedding_scale
 
 
 def main():
-    global base_url
+    global url
     global session
 
-    parser = argparse.ArgumentParser(
-        description='Send TTS requests to a server.')
-    parser.add_argument('base_url', help='The URL of the TTS server')
+    parser = argparse.ArgumentParser(description='Send TTS requests to a server and play the resulting audio.')
     parser.add_argument('passage', help='Passage to convert to speech')
+    parser.add_argument('--url', help='Server base URL')
     parser.add_argument('--session', help='Session identifier')
     parser.add_argument('--style', default='en-f-1', help='Style of the voice')
-    parser.add_argument('--alpha', type=float, default=0.1,
-                        help='Alpha parameter')
-    parser.add_argument('--beta', type=float, default=0.1,
-                        help='Beta parameter')
-    parser.add_argument('--diffusion_steps', type=int,
-                        default=7, help='Number of diffusion steps')
-    parser.add_argument('--embedding_scale', type=float,
-                        default=1, help='Embedding scale')
+    parser.add_argument('--alpha', type=float, default=0.1, help='Alpha parameter')
+    parser.add_argument('--beta', type=float, default=0.1, help='Beta parameter')
+    parser.add_argument('--diffusion_steps', type=int, default=7, help='Number of diffusion steps')
+    parser.add_argument('--embedding_scale', type=float, default=1, help='Embedding scale')
 
     args = parser.parse_args()
 
@@ -89,8 +80,8 @@ def main():
     if args.session is not None:
         session = args.session
 
-    if args.base_url is not None:
-        base_url = args.base_url
+    if args.url is not None:
+        url = args.url
 
     if args.passage == '-':
         args.passage = sys.stdin.read()

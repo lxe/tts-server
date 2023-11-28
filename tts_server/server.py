@@ -25,7 +25,6 @@ class Phonemizer:
             passage = texts[0]
             command = f'echo {passage} | espeak-phonemizer -v {self.language} --keep-punctuation'
             output = subprocess.check_output(command, shell=True, text=True)
-            print(output)
             return [output]
         except Exception as e:
             print(e)
@@ -57,10 +56,10 @@ def text_to_speech():
             return jsonify({"error": "Missing text"}), 400
 
         voice = data.get('style', 'en-f-1')
-        alpha = data.get('alpha', 0.1)
-        beta = data.get('beta', 0.3)
-        diffusion_steps = data.get('diffusion_steps', 5)
-        embedding_scale = data.get('embedding_scale', 1)
+        alpha = data.get('alpha', 0.3)
+        beta = data.get('beta', 0.7)
+        diffusion_steps = data.get('diffusion_steps', 10)
+        embedding_scale = data.get('embedding_scale', 1.5)
 
         # Retrieve or compute style
         if voice not in styles:
@@ -72,6 +71,9 @@ def text_to_speech():
         # Generate key for previous voice state
         vkey = f"{session}/{voice}"
         prev_s = prev_s_db.get(vkey, None)
+        
+        # Set random seed
+        tts.set_seed(hash(session))
 
         # Generate audio
         wav, prev_s = tts.inference(
