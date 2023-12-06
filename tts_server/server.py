@@ -5,6 +5,7 @@ import soundfile as sf
 import argparse
 from styletts2 import TTS
 import subprocess
+from phonemizer import phonemize
 
 app = Flask(__name__)
 fdir = os.path.dirname(__file__)
@@ -22,14 +23,10 @@ class Phonemizer:
 
     def phonemize(self, texts):
         try:
-            passage = texts[0]
-            command = f'echo {passage} | espeak-phonemizer -v {self.language} --keep-punctuation'
-            output = subprocess.check_output(command, shell=True, text=True)
-            return [output]
+            return [phonemize(text, language=self.language) for text in texts]
         except Exception as e:
             print(e)
             return None
-
 
 phonemizer = Phonemizer()
 
