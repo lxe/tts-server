@@ -1,2 +1,3 @@
 flask
+phonemizer
 git+https://github.com/lxe/styletts2.git
